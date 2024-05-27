@@ -1,4 +1,13 @@
-﻿#ifndef __IZADORI_ZIPPER_H__
+﻿//
+// zipper.h
+//
+// Copyright (c) 2024 Izadori
+//
+// This software is released under the MIT License.
+// http://opensource.org/licenses/mit-license.php
+//
+
+#ifndef __IZADORI_ZIPPER_H__
 #define __IZADORI_ZIPPER_H__
 
 #include <tuple>
