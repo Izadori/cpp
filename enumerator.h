@@ -178,7 +178,7 @@ public:
 	}
 
 private:
-	Zipper<Containers...> & zipper_;
+	Zipper<Containers...> zipper_;
 	size_t initial_index_;
 	size_t step_;
 };
