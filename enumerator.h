@@ -27,7 +27,7 @@ class Enumerator final
 {
 public:
 	Enumerator() = delete;
-	Enumerator(Container & container, size_t initial_index = 0, size_t step = 1)
+	Enumerator(Container & container, int initial_index = 0, int step = 1)
 		: ref_(container), initial_index_(initial_index), step_(step) {}
 
 	class Iterator final
@@ -58,11 +58,11 @@ public:
 		}
 
 	private:
-		size_t index_;
-		size_t step_;
+		int index_;
+		int step_;
 		typename Container::iterator iter_;
 
-		static Iterator Begin(Container & container, size_t initial_index, size_t step)
+		static Iterator Begin(Container & container, int initial_index, int step)
 		{
 			Iterator it;
 			it.iter_ = std::begin(container);
@@ -71,11 +71,11 @@ public:
 			return it;
 		}
 
-		static Iterator End(Container & container, size_t step)
+		static Iterator End(Container & container, int initial_index, int step)
 		{
 			Iterator it;
 			it.iter_ = std::end(container);
-			it.index_ = container.size();
+			it.index_ = container.size() + initial_index;
 			it.step_ = step;
 			return it;
 		}
@@ -92,13 +92,13 @@ public:
 
 	Iterator end()
 	{
-		return Iterator::End(ref_, step_);
+		return Iterator::End(ref_, initial_index, step_);
 	}
 
 private:
 	Container & ref_;
-	size_t initial_index_;
-	size_t step_;
+	int initial_index_;
+	int step_;
 };
 
 //-----------------------------------------------------------------------------------------
@@ -109,7 +109,7 @@ class Enumerator<Zipper<Containers...>> final
 {
 public:
 	Enumerator() = delete;
-	Enumerator(Zipper<Containers...> & zipper, size_t initial_index = 0, size_t step = 1)
+	Enumerator(Zipper<Containers...> & zipper, int initial_index = 0, int step = 1)
 		: zipper_(zipper), initial_index_(initial_index), step_(step) {}
 
 	class Iterator final
@@ -140,11 +140,11 @@ public:
 		};
 
 	private:
-		size_t index_;
-		size_t step_;
+		int index_;
+		int step_;
 		typename Zipper<Containers...>::iterator iter_;
 
-		static Iterator Begin(Zipper<Containers...> & zipper, size_t initial_index, size_t step)
+		static Iterator Begin(Zipper<Containers...> & zipper, int initial_index, int step)
 		{
 			Iterator it;
 			it.iter_ = zipper.begin();
@@ -153,11 +153,11 @@ public:
 			return it;
 		}
 
-		static Iterator End(Zipper<Containers...> & zipper, size_t step)
+		static Iterator End(Zipper<Containers...> & zipper, int initial_index, int step)
 		{
 			Iterator it;
 			it.iter_ = zipper.end();
-			it.index_ = zipper.size();
+			it.index_ = zipper.size() + initial_index;
 			it.step_ = step;
 			return it;
 		}
@@ -174,20 +174,20 @@ public:
 
 	Iterator end()
 	{
-		return Iterator::End(zipper_, step_);
+		return Iterator::End(zipper_, initial_index_, step_);
 	}
 
 private:
 	Zipper<Containers...> zipper_;
-	size_t initial_index_;
-	size_t step_;
+	int initial_index_;
+	int step_;
 };
 
 //-----------------------------------------------------------------------------------------
 // Enumernate()関数（右辺値参照版）
 //-----------------------------------------------------------------------------------------
 template <class Container>
-Enumerator<Container> Enumerate(Container && container, size_t initial_index = 0, size_t step = 1)
+Enumerator<Container> Enumerate(Container && container, int initial_index = 0, int step = 1)
 {
 	return Enumerator(container, initial_index, step);
 }
@@ -196,7 +196,7 @@ Enumerator<Container> Enumerate(Container && container, size_t initial_index = 0
 // Enumernate()関数（左辺値参照版）
 //-----------------------------------------------------------------------------------------
 template <class Container>
-Enumerator<Container> Enumerate(Container & container, size_t initial_index = 0, size_t step = 1)
+Enumerator<Container> Enumerate(Container & container, int initial_index = 0, int step = 1)
 {
 	return Enumerator(container, initial_index, step);
 }
