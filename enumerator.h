@@ -75,7 +75,7 @@ public:
 		{
 			Iterator it;
 			it.iter_ = std::end(container);
-			it.index_ = container.size() + initial_index;
+			it.index_ = (int)container.size() + initial_index;
 			it.step_ = step;
 			return it;
 		}
@@ -157,7 +157,7 @@ public:
 		{
 			Iterator it;
 			it.iter_ = zipper.end();
-			it.index_ = zipper.size() + initial_index;
+			it.index_ = (int)zipper.size() + initial_index;
 			it.step_ = step;
 			return it;
 		}
