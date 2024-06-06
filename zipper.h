@@ -10,12 +10,37 @@
 #ifndef __IZADORI_ZIPPER_H__
 #define __IZADORI_ZIPPER_H__
 
+#include <algorithm>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 //-----------------------------------------------------------------------------------------
 // Python風のzip()関数の実装（C++17対応のコンパイラが必要）
 //-----------------------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------------------
+// GetIteratorImplクラス - コンテナの場合はイテレータを、配列の場合にはポインタを返す
+//-----------------------------------------------------------------------------------------
+template <typename T>
+struct GetIteratorImpl {
+	using iterator = decltype(std::begin(std::declval<T &>()));
+	using reference = typename std::iterator_traits<iterator>::reference;
+	using value_type = typename std::iterator_traits<iterator>::value_type;
+	using pointer = typename std::iterator_traits<iterator>::pointer;
+};
+
+template <typename T>
+using GetIterator = typename GetIteratorImpl<T>::iterator;
+
+template <typename T>
+using GetReference = typename GetIteratorImpl<T>::reference;
+
+template <typename T>
+using GetValueType = typename GetIteratorImpl<T>::value_type;
+
+template <typename T>
+using GetPointer = typename GetIteratorImpl<T>::pointer;
 
 //-----------------------------------------------------------------------------------------
 // Zipperコンテナクラス
@@ -27,6 +52,12 @@ public:
 	Zipper() = delete;
 	Zipper(Containers &... containers) : tpl_({containers...}) {}
 
+	class EndIterator final
+	{
+	public:
+		std::tuple<GetIterator<Containers>...> iter_;
+	};
+
 	class Iterator final
 	{
 	public:
@@ -35,9 +66,19 @@ public:
 			return this->iter_ == it.iter_;
 		}
 
+		bool operator==(const EndIterator & it) const
+		{
+			return IsEnd(it, std::make_index_sequence<sizeof...(Containers)>{});
+		}
+
 		bool operator!=(const Iterator & it) const
 		{
 			return this->iter_ != it.iter_;
+		}
+
+		bool operator!=(const EndIterator & it) const
+		{
+			return !(*this == it);
 		}
 
 		Iterator & operator++()
@@ -49,16 +90,11 @@ public:
 		auto operator*()
 		{
 			auto iter_tmp = iter_;
-			return std::apply(GetValue<iterator<Containers>...>, iter_tmp);
+			return std::apply(GetValue<GetIterator<Containers>...>, iter_tmp);
 		}
 
 	private:
-		template <class T>
-		using iterator = typename T::iterator;
-		template <class T>
-		using reference = typename T::reference;
-
-		std::tuple<iterator<Containers>...> iter_;
+		std::tuple<GetIterator<Containers>...> iter_;
 
 		template <size_t... N>
 		void Increment(std::index_sequence<N...>)
@@ -74,7 +110,7 @@ public:
 		}
 
 		template <typename... ContainerIterators>
-		static std::tuple<reference<Containers>...> GetValue(ContainerIterators &... containers)
+		static std::tuple<GetReference<Containers>...> GetValue(ContainerIterators &... containers)
 		{
 			return {GetValueHelper<ContainerIterators>(containers)...};
 		}
@@ -86,11 +122,19 @@ public:
 			return it;
 		}
 
-		static Iterator End(Containers &... containers)
+		static EndIterator End(Containers &... containers)
 		{
-			Iterator it;
+			EndIterator it;
 			it.iter_ = std::make_tuple(std::end(containers)...);
 			return it;
+		}
+
+		template <size_t... N>
+		bool IsEnd(const EndIterator & it, std::index_sequence<N...>) const
+		{
+			bool chk[] = {(std::get<N>(iter_) == std::get<N>(it.iter_))...};
+
+			return std::any_of(std::begin(chk), std::end(chk), [](bool x) { return x; });
 		}
 
 		friend Zipper;
@@ -105,7 +149,7 @@ public:
 		return std::apply(Iterator::Begin, tpl_);
 	}
 
-	Iterator end()
+	EndIterator end()
 	{
 		return std::apply(Iterator::End, tpl_);
 	}
@@ -121,7 +165,7 @@ private:
 	template <size_t... N>
 	size_t GetSize(std::index_sequence<N...>)
 	{
-		return std::min({std::get<N>(tpl_).size()...});
+		return std::min({(std::distance(std::begin(std::get<N>(tpl_)), std::end(std::get<N>(tpl_))))...});
 	}
 };
 
