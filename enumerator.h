@@ -202,21 +202,21 @@ private:
 };
 
 //-----------------------------------------------------------------------------------------
-// Enumernate()関数（右辺値参照版）
-//-----------------------------------------------------------------------------------------
-template <class Container>
-Enumerator<Container> Enumerate(Container && container, int initial_index = 0, int step = 1)
-{
-	return Enumerator(container, initial_index, step);
-}
-
-//-----------------------------------------------------------------------------------------
-// Enumernate()関数（左辺値参照版）
+// Enumernate()関数
 //-----------------------------------------------------------------------------------------
 template <class Container>
 Enumerator<Container> Enumerate(Container & container, int initial_index = 0, int step = 1)
 {
 	return Enumerator(container, initial_index, step);
+}
+
+//-----------------------------------------------------------------------------------------
+// Enumernate()関数（Zipper<>版）
+//-----------------------------------------------------------------------------------------
+template <class... Containers>
+Enumerator<Zipper<Containers...>> Enumerate(Zipper<Containers...> && zipper, int initial_index = 0, int step = 1)
+{
+	return Enumerator(zipper, initial_index, step);
 }
 
 #endif // __IZADORI_ENUMERATOR_H__
