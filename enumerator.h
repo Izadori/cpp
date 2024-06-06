@@ -52,7 +52,7 @@ public:
 			return *this;
 		}
 
-		std::tuple<size_t, typename Container::reference> operator*()
+		std::tuple<int, GetReference<Container>> operator*()
 		{
 			return {index_, *iter_};
 		}
@@ -60,7 +60,7 @@ public:
 	private:
 		int index_;
 		int step_;
-		typename Container::iterator iter_;
+		GetIterator<Container> iter_;
 
 		static Iterator Begin(Container & container, int initial_index, int step)
 		{
@@ -75,7 +75,7 @@ public:
 		{
 			Iterator it;
 			it.iter_ = std::end(container);
-			it.index_ = (int)container.size() + initial_index;
+			it.index_ = (int)(std::distance(std::begin(container), std::end(container)) - 1) * step + initial_index;
 			it.step_ = step;
 			return it;
 		}
@@ -92,7 +92,7 @@ public:
 
 	Iterator end()
 	{
-		return Iterator::End(ref_, initial_index, step_);
+		return Iterator::End(ref_, initial_index_, step_);
 	}
 
 private:
@@ -112,6 +112,14 @@ public:
 	Enumerator(Zipper<Containers...> & zipper, int initial_index = 0, int step = 1)
 		: zipper_(zipper), initial_index_(initial_index), step_(step) {}
 
+	class EndIterator final
+	{
+	public:
+		int index_;
+		int step_;
+		typename Zipper<Containers...>::EndIterator iter_;
+	};
+
 	class Iterator final
 	{
 	public:
@@ -122,9 +130,19 @@ public:
 			return this->iter_ == it.iter_;
 		}
 
+		bool operator==(const EndIterator & it) const
+		{
+			return this->iter_ == it.iter_;
+		}
+
 		bool operator!=(const Iterator & it) const
 		{
 			return this->iter_ != it.iter_;
+		}
+
+		bool operator!=(const EndIterator & it) const
+		{
+			return !(*this == it);
 		}
 
 		Iterator & operator++()
@@ -153,11 +171,11 @@ public:
 			return it;
 		}
 
-		static Iterator End(Zipper<Containers...> & zipper, int initial_index, int step)
+		static EndIterator End(Zipper<Containers...> & zipper, int initial_index, int step)
 		{
-			Iterator it;
+			EndIterator it;
 			it.iter_ = zipper.end();
-			it.index_ = (int)zipper.size() + initial_index;
+			it.index_ = (int)(zipper.size() - 1) * step + initial_index;
 			it.step_ = step;
 			return it;
 		}
@@ -172,7 +190,7 @@ public:
 		return Iterator::Begin(zipper_, initial_index_, step_);
 	}
 
-	Iterator end()
+	EndIterator end()
 	{
 		return Iterator::End(zipper_, initial_index_, step_);
 	}
